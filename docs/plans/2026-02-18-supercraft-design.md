@@ -104,6 +104,63 @@ supercraft/                              # GitHub 仓库
 将返回的规范内容用于后续工作。
 ```
 
+### 2.5 Session Hook 自动注入
+
+通过 SessionStart Hook 在会话启动时自动注入上下文。
+
+**hooks/hooks.json**:
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**hooks/session-start.sh**:
+```bash
+#!/bin/bash
+# 读取项目配置和状态，注入 AI 上下文
+
+PROJECT_ROOT=$(pwd)
+SUPERCRAFT_DIR="${PROJECT_ROOT}/.supercraft"
+
+# 检查是否已初始化
+if [ -d "$SUPERCRAFT_DIR" ]; then
+  CONFIG_CONTENT=$(cat "${SUPERCRAFT_DIR}/config.yaml" 2>/dev/null || echo "")
+  STATE_CONTENT=$(cat "${SUPERCRAFT_DIR}/state.yaml" 2>/dev/null || echo "")
+
+  # 输出 JSON 格式的上下文注入
+  cat <<EOF
+{
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": "<SUPERCRRAFT_CONTEXT>\n当前项目配置:\n${CONFIG_CONTENT}\n\n当前进度:\n${STATE_CONTENT}\n</SUPERCRRAFT_CONTEXT>"
+  }
+}
+EOF
+fi
+```
+
+**自动注入 vs 显式调用**:
+
+| 内容 | 注入方式 | 原因 |
+|------|----------|------|
+| 项目配置 (`config.yaml`) | Hook 自动注入 | 每个会话都需要知道配置 |
+| 当前状态 (`state.yaml`) | Hook 自动注入 | AI 需要知道当前进度 |
+| 用户规范 (`specs/*`) | Skill 显式调用 | 按需获取，不是每个会话都需要 |
+| 文档模板 (`templates/*`) | Skill 显式调用 | 只有特定 Skill 需要模板 |
+
 ---
 
 ## 3. 项目结构（详细）
@@ -112,6 +169,9 @@ supercraft/                              # GitHub 仓库
 supercraft/
 ├── .claude-plugin/
 │   └── plugin.json              # 插件元数据
+├── hooks/
+│   ├── hooks.json               # Hook 配置
+│   └── session-start.sh         # 会话启动脚本
 ├── package.json
 ├── tsconfig.json
 ├── src/
