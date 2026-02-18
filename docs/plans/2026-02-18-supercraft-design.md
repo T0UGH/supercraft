@@ -27,6 +27,7 @@ Supercraft 是为解决 Superpowers 的核心痛点而设计的 AI 辅助开发�
 | 决策项 | 选择 |
 |--------|------|
 | 目标平台 | Claude Code |
+| 分发方式 | Claude Code Plugin（独立仓库） |
 | 技术栈 | TypeScript |
 | 状态文件格式 | YAML |
 | 技能格式 | 静态 Markdown 文件 |
@@ -34,10 +35,83 @@ Supercraft 是为解决 Superpowers 的核心痛点而设计的 AI 辅助开发�
 
 ---
 
-## 2. 项目结构
+## 2. Claude Code 插件机制
+
+### 2.1 插件结构
+
+Supercraft 作为 Claude Code 插件发布，用户通过 `/plugins install T0UGH/supercraft` 安装。
+
+```
+supercraft/                              # GitHub 仓库
+├── .claude-plugin/
+│   └── plugin.json                      # 插件元数据（必需）
+├── src/                                 # CLI 源码
+│   ├── cli/
+│   ├── core/
+│   └── index.ts
+├── skills/                              # 技能定义
+│   ├── brainstorming/
+│   │   └── SKILL.md
+│   ├── writing-plans/
+│   ├── execute-plan/
+│   └── verification/
+├── templates/                           # 默认模板
+├── package.json                         # npm 包配置
+└── tsconfig.json
+```
+
+### 2.2 plugin.json
+
+```json
+{
+  "name": "supercraft",
+  "description": "可定制的 AI 辅助开发工作流系统，支持配置注入和进度管理",
+  "version": "0.1.0",
+  "author": {
+    "name": "T0UGH"
+  },
+  "homepage": "https://github.com/T0UGH/supercraft",
+  "repository": "https://github.com/T0UGH/supercraft",
+  "license": "MIT",
+  "keywords": ["skills", "workflow", "progress", "customizable"]
+}
+```
+
+### 2.3 安装流程
+
+```
+1. 用户在 Claude Code 中执行: /plugins install T0UGH/supercraft
+2. Claude Code 下载插件到: ~/.claude/plugins/cache/
+3. Skills 自动被发现，可通过 /supercraft:brainstorming 等方式触发
+4. CLI 工具随插件一起安装，Skills 通过 npx supercraft 调用
+```
+
+### 2.4 Skills 与 CLI 的关系
+
+- **Skills** 在 `skills/` 目录，由 Claude Code 自动发现
+- **CLI** 在 `src/cli/` 目录，编译后通过 `npx supercraft` 调用
+- **Skills 调用 CLI**：在 SKILL.md 中指导 AI 执行 Bash 命令调用 CLI
+
+```markdown
+# SKILL.md 示例
+
+## 前置步骤
+
+执行以下命令获取用户规范：
+
+    supercraft spec get coding-style
+
+将返回的规范内容用于后续工作。
+```
+
+---
+
+## 3. 项目结构（详细）
 
 ```
 supercraft/
+├── .claude-plugin/
+│   └── plugin.json              # 插件元数据
 ├── package.json
 ├── tsconfig.json
 ├── src/
@@ -45,14 +119,18 @@ supercraft/
 │   ├── core/
 │   │   ├── config.ts             # 配置管理
 │   │   └── state.ts              # 状态管理
-│   ├── cli/
-│   │   ├── index.ts              # CLI 入口
-│   │   └── commands/             # CLI 命令
-│   └── skills/                   # 技能定义
-│       ├── brainstorming/
-│       ├── writing-plans/
-│       ├── execute-plan/
-│       └── verification/
+│   └── cli/
+│       ├── index.ts              # CLI 入口
+│       └── commands/             # CLI 命令实现
+├── skills/                       # 技能定义
+│   ├── brainstorming/
+│   │   └── SKILL.md
+│   ├── writing-plans/
+│   │   └── SKILL.md
+│   ├── execute-plan/
+│   │   └── SKILL.md
+│   └── verification/
+│       └── SKILL.md
 ├── templates/                    # 默认模板
 │   ├── design-doc.md
 │   └── plan.md
@@ -61,7 +139,7 @@ supercraft/
 
 ---
 
-## 3. CLI 命令设计
+## 4. CLI 命令设计
 
 ```
 supercraft <command> [options]
@@ -101,7 +179,7 @@ Options:
 
 ---
 
-## 4. 目录结构
+## 5. 目录结构
 
 `supercraft init` 创建的结构：
 
@@ -118,7 +196,7 @@ Options:
 
 ---
 
-## 5. 配置系统
+## 6. 配置系统
 
 ### 5.1 配置层级
 
@@ -162,7 +240,7 @@ progress:
 
 ---
 
-## 6. 状态管理
+## 7. 状态管理
 
 ### 6.1 状态文件结构
 
@@ -223,7 +301,7 @@ metadata:
 
 ---
 
-## 7. 技能系统
+## 8. 技能系统
 
 ### 7.1 设计原则
 
@@ -259,7 +337,7 @@ description: "Use when starting any creative work"
 
 ---
 
-## 8. 规范注入系统
+## 9. 规范注入系统
 
 ### 8.1 核心思路
 
@@ -299,7 +377,7 @@ AI 基于规范执行 Skill
 
 ---
 
-## 9. 测试策略
+## 10. 测试策略
 
 | 模块 | 测试重点 |
 |------|----------|
@@ -311,7 +389,7 @@ AI 基于规范执行 Skill
 
 ---
 
-## 10. MVP 功能清单
+## 11. MVP 功能清单
 
 - [ ] CLI 工具基础框架
 - [ ] `supercraft init` 命令
