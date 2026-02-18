@@ -654,10 +654,16 @@ AI 应根据当前配置决定执行方式。
 | 技能 | 功能 | 从 Superpowers 迁移/重新设计 |
 |------|------|------------------------------|
 | `brainstorming` | 头脑风暴，设计转化 | 简化版重新设计 |
-| `test-driven-development` | TDD 流程 | 迁移核心，简化严格度 |
-| `systematic-debugging` | 系统化调试 | 迁移核心流程 |
 | `writing-plans` | 编写实施计划 | 简化版重新设计 |
+| `execute-plan` | 执行实施计划 | 简化版重新设计 |
 | `verification` | 完成前验证 | 简化版重新设计 |
+
+**后续版本技能**：
+
+| 技能 | 功能 | 版本 |
+|------|------|------|
+| `test-driven-development` | TDD 流程 | v0.2.0 |
+| `systematic-debugging` | 系统化调试 | v0.2.0 |
 
 ---
 
@@ -996,10 +1002,12 @@ function detectPlatform(): PlatformAdapter {
 - [ ] `supercraft status` 命令
 - [ ] `supercraft task` 命令组
 - [ ] `supercraft config` 命令组
+- [ ] `supercraft spec` 命令组（规范管理）
+- [ ] `supercraft template` 命令组（模板查看）
 - [ ] 配置系统（全局 + 项目）
 - [ ] 状态持久化
 - [ ] Claude Code 平台适配
-- [ ] 3 个核心技能（brainstorming, writing-plans, verification）
+- [ ] 4 个核心技能（brainstorming, writing-plans, execute-plan, verification）
 
 ### 11.2 后续版本
 
