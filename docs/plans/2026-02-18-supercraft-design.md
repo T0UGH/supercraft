@@ -513,18 +513,81 @@ AI 基于规范执行 Skill
 
 ---
 
-## 11. MVP 功能清单
+## 11. 分阶段交付计划
 
-- [ ] CLI 工具基础框架
+### Phase 1: 核心链路验证
+
+**目标**：验证插件安装 + Hook 注入 + 技能触发
+
+| 功能 | 说明 |
+|------|------|
+| `.claude-plugin/plugin.json` | 插件元数据 |
+| `hooks/session-start.sh` | 会话启动时注入配置 |
+| `supercraft init` | 创建 `.supercraft/` 目录结构 |
+| `supercraft status` | 查看当前状态 |
+| `brainstorming` skill | 验证技能可被触发 |
+
+**验收标准**：
+- `supercraft init` 创建正确的目录结构
+- 会话启动时 AI 能看到配置内容
+- `/supercraft:brainstorming` 能触发技能
+
+### Phase 2: 状态管理
+
+**目标**：验证状态持久化 + AI 读写
+
+| 功能 | 说明 |
+|------|------|
+| `state.yaml` 结构 | 任务状态持久化 |
+| `supercraft task` 命令组 | 任务 CRUD |
+| `supercraft state` 命令组 | 快照和回退 |
+| `writing-plans` skill | 创建任务并写入状态 |
+| `execute-plan` skill | 读取状态执行任务 |
+
+**验收标准**：
+- AI 能通过 CLI 创建/更新任务
+- 状态在会话间保持
+- 能回退到历史快照
+
+### Phase 3: 完整功能
+
+**目标**：完整 MVP 功能
+
+| 功能 | 说明 |
+|------|------|
+| `supercraft config` 命令组 | 配置管理 |
+| `supercraft spec` 命令组 | 规范管理 |
+| `supercraft template` 命令组 | 模板管理 |
+| `verification` skill | 完成前验证 |
+
+**验收标准**：
+- 所有 CLI 命令可用
+- 4 个技能完整可用
+- 用户规范/模板能被正确注入
+
+---
+
+## 12. MVP 功能清单
+
+### Phase 1
+- [ ] `.claude-plugin/plugin.json`
+- [ ] `hooks/hooks.json` + `session-start.sh`
 - [ ] `supercraft init` 命令
 - [ ] `supercraft status` 命令
+- [ ] `brainstorming` skill
+
+### Phase 2
+- [ ] `state.yaml` 持久化
 - [ ] `supercraft task` 命令组
+- [ ] `supercraft state` 命令组（快照/回退）
+- [ ] `writing-plans` skill
+- [ ] `execute-plan` skill
+
+### Phase 3
 - [ ] `supercraft config` 命令组
 - [ ] `supercraft spec` 命令组
 - [ ] `supercraft template` 命令组
-- [ ] 配置系统（全局 + 项目）
-- [ ] 状态持久化
-- [ ] 4 个核心技能
+- [ ] `verification` skill
 
 ---
 
