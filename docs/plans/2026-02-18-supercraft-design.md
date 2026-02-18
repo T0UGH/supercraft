@@ -161,6 +161,13 @@ Commands:
     task start <id>       开始执行任务
     task complete <id>    标记任务完成
     task block <id> <reason>  标记任务阻塞
+    task rollback <id>    回退任务到上一状态
+    task rollback <id> --to <status>  回退到指定状态
+
+  state                   状态管理
+    state snapshot        创建当前状态快照
+    state history         列出历史快照
+    state restore <file>  恢复到指定快照
 
   spec                    规范管理
     spec list             列出所有规范
@@ -187,6 +194,9 @@ Options:
 .supercraft/
 ├── config.yaml          # 项目配置
 ├── state.yaml           # 任务状态
+├── history/             # 状态快照历史
+│   ├── 2026-02-18T10-00-00.yaml
+│   └── 2026-02-18T11-00-00.yaml
 ├── specs/               # 用户规范
 │   └── coding-style.md
 └── templates/           # 文档模板
@@ -290,7 +300,7 @@ metadata:
   updated_at: 2026-02-18T10:35:00Z
 ```
 
-### 6.2 任务状态流转
+### 7.2 任务状态流转
 
 | 状态 | 说明 | 可转换到 |
 |------|------|----------|
@@ -298,6 +308,66 @@ metadata:
 | `in_progress` | 进行中 | `completed`, `blocked` |
 | `completed` | 已完成 | - |
 | `blocked` | 被阻塞 | `pending`, `in_progress` |
+
+### 7.3 AI 读写状态
+
+AI 通过 **调用 CLI 命令** 读写状态，不直接操作文件。
+
+**读取状态**：
+```bash
+supercraft status          # 查看整体进度
+supercraft task show <id>  # 查看单个任务
+```
+
+**更新状态**：
+```bash
+supercraft task start <id>           # 开始任务
+supercraft task complete <id>        # 完成任务
+supercraft task block <id> <reason>  # 阻塞任务
+```
+
+**在 SKILL.md 中指导 AI**：
+```markdown
+## 任务管理
+
+完成任务后，执行以下命令更新状态：
+
+    supercraft task complete <task-id>
+
+如果遇到阻塞，执行：
+
+    supercraft task block <task-id> <原因>
+```
+
+### 7.4 状态回退
+
+支持回退到之前的状态快照，用于：
+- 撤销错误操作
+- 恢复到某个历史节点
+- 调试和审计
+
+**快照机制**：
+```
+.supercraft/
+├── state.yaml              # 当前状态
+└── history/                # 历史快照
+    ├── 2026-02-18T10-00-00.yaml
+    ├── 2026-02-18T11-00-00.yaml
+    └── 2026-02-18T12-00-00.yaml
+```
+
+**回退命令**：
+```bash
+supercraft task rollback <task-id>        # 回退单个任务到上一状态
+supercraft task rollback <task-id> --to <status>  # 回退到指定状态
+supercraft state restore <snapshot-file>  # 恢复整个快照
+supercraft state history                  # 列出所有快照
+```
+
+**自动快照时机**：
+- 每次 `task` 命令执行前
+- `supercraft init` 时
+- 用户手动执行 `supercraft state snapshot`
 
 ---
 
