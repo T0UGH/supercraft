@@ -266,47 +266,41 @@ Options:
 
 ---
 
-## 6. 配置系统
+## 6. 配置系统（MVP 简化版）
 
-### 5.1 配置层级
+### 6.1 配置层级
 
 ```
 全局配置 (~/.supercraft/config.yaml)  ← 最低优先级
     ↓ 覆盖
 项目配置 (.supercraft/config.yaml)
-    ↓ 覆盖
-环境变量 (SUPERCRAFT_*)
 ```
 
-### 5.2 配置文件结构
+### 6.2 配置文件结构
+
+**MVP 极简配置**：
 
 ```yaml
 # .supercraft/config.yaml
 
 project:
   name: my-project
-  description: 项目描述
 
-skills:
-  brainstorming:
-    enabled: true
-    strictness: normal    # relaxed | normal | strict
-
-  writing-plans:
-    enabled: true
-
-  execute-plan:
-    enabled: true
-
-  verification:
-    enabled: true
-    commands:
-      - npm test
-      - npm run lint
-
-progress:
-  auto_save: true
+verification:
+  commands:
+    - npm test
 ```
+
+**设计原则**：
+- MVP 只保留**必须**的配置项
+- 技能行为由 SKILL.md 定义，不通过配置调整
+- 用户定制通过 `specs/` 目录注入规范实现，不通过技能配置
+- 后续版本根据实际需求再增加配置项
+
+**移除的配置项**：
+- `skills.*.enabled` — 技能总是可用，由用户决定是否触发
+- `skills.*.strictness` — 技能行为在 SKILL.md 中定义
+- `progress.auto_save` — 状态总是自动保存
 
 ---
 
