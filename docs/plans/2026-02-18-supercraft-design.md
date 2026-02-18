@@ -184,14 +184,14 @@ Commands:
     state history         列出历史快照
     state restore <file>  恢复到指定快照
 
-  spec                    规范管理
+  spec                    规范管理（知识类）
     spec list             列出所有规范
-    spec get <name>       获取规范内容（供 AI 读取）
-    spec edit <name>      编辑规范（打开编辑器）
+    spec get <name>       获取规范内容（注入 AI 上下文）
 
-  template                模板管理
+  template                模板管理（模板类）
     template list         列出可用模板
-    template show <name>  显示模板内容
+    template show <name>  预览模板内容
+    template copy <name>  复制模板到本地（AI 调用）
 
 Options:
   --global                操作全局配置（而非项目配置）
@@ -403,29 +403,31 @@ description: "Use when starting any creative work"
 
 ---
 
-## 8. 规范注入系统
+## 8. 规范与模板系统
 
-### 8.1 核心思路
+### 8.1 两类不同的命令
 
-Skills 执行时，先调用 CLI 获取用户规范内容，然后注入到 AI 上下文中。
+| 类型 | 命令 | 用途 | AI 如何使用 |
+|------|------|------|-------------|
+| **知识类** | `spec get <name>` | 读取规范内容 | 直接注入 AI 上下文 |
+| **模板类** | `template copy <name>` | 复制模板到本地 | AI 基于复制出的文件填充内容 |
 
-### 8.2 调用模式
+### 8.2 CLI 命令
 
 ```
-Skill 被触发
-    ↓
-调用 CLI: supercraft spec get <name>
-    ↓
-CLI 返回规范内容
-    ↓
-注入 AI 上下文
-    ↓
-AI 基于规范执行 Skill
+spec                    规范管理
+  spec list             列出所有规范
+  spec get <name>       获取规范内容（注入上下文）
+
+template                模板管理
+  template list         列出可用模板
+  template show <name>  预览模板内容
+  template copy <name>  复制模板到本地（AI 调用）
 ```
 
 ### 8.3 使用示例
 
-**execute-plan skill**:
+**execute-plan skill**（知识类）:
 ```
 1. 调用: supercraft spec get coding-style
 2. CLI 返回: 用户定义的代码规范
@@ -433,12 +435,16 @@ AI 基于规范执行 Skill
 4. AI 按照规范执行计划
 ```
 
-**brainstorming skill**:
+**brainstorming skill**（知识类 + 模板类）:
 ```
-1. 调用: supercraft template show design-doc
-2. CLI 返回: 设计文档模板内容
-3. 注入到 AI 上下文
-4. AI 基于模板结构进行头脑风暴
+1. 调用: supercraft spec get coding-style
+   → 规范注入上下文
+
+2. 调用: supercraft template copy design-doc
+   → 在 docs/plans/ 创建设计文档副本
+   → 例如: docs/plans/2026-02-18-auth-feature.md
+
+3. AI 基于复制出的模板文件，通过对话填充内容
 ```
 
 ---
