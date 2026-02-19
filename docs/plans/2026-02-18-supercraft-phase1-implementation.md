@@ -152,13 +152,69 @@ git commit -m "feat: add CLI framework with commander"
 
 ---
 
-## Task 3: init 命令
+## Task 3: 核心模块（types, filesystem, state）
 
 **Files:**
-- Create: `src/cli/commands/init.ts`
+- Create: `src/core/types.ts`
 - Create: `src/core/filesystem.ts`
+- Create: `src/core/state.ts`
 
-**Step 1: 创建文件系统工具**
+**Step 1: 创建类型定义**
+
+Create `src/core/types.ts`:
+
+```typescript
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'blocked';
+  priority: 'high' | 'medium' | 'low';
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  blocked_reason?: string;
+}
+
+export interface Metrics {
+  total_tasks: number;
+  completed: number;
+  in_progress: number;
+  pending: number;
+  blocked: number;
+  progress_percent: number;
+}
+
+export interface State {
+  version: string;
+  project: {
+    name: string;
+    root: string;
+  };
+  current?: {
+    plan_id?: string;
+    plan_name?: string;
+    phase?: string;
+  };
+  tasks: Task[];
+  metrics: Metrics;
+  metadata: {
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+export interface Config {
+  project: {
+    name: string;
+  };
+  verification?: {
+    commands: string[];
+  };
+}
+```
+
+**Step 2: 创建文件系统工具**
 
 Create `src/core/filesystem.ts`:
 
@@ -190,7 +246,103 @@ export function getSupercraftDir(): string {
 }
 ```
 
-**Step 2: 创建 init 命令**
+**Step 3: 创建状态管理模块**
+
+Create `src/core/state.ts`:
+
+```typescript
+import fs from 'fs';
+import path from 'path';
+import yaml from 'yaml';
+import { State, Task } from './types.js';
+import { getSupercraftDir, fileExists } from './filesystem.js';
+
+const STATE_FILE = 'state.yaml';
+
+export function getStatePath(): string {
+  return path.join(getSupercraftDir(), STATE_FILE);
+}
+
+export function loadState(): State | null {
+  const statePath = getStatePath();
+  if (!fileExists(statePath)) {
+    return null;
+  }
+  const content = fs.readFileSync(statePath, 'utf-8');
+  return yaml.parse(content) as State;
+}
+
+export function saveState(state: State): void {
+  state.metadata.updated_at = new Date().toISOString();
+  const statePath = getStatePath();
+  const content = yaml.stringify(state);
+  fs.writeFileSync(statePath, content, 'utf-8');
+}
+
+export function saveSnapshot(state: State): string {
+  const historyDir = path.join(getSupercraftDir(), 'history');
+  if (!fs.existsSync(historyDir)) {
+    fs.mkdirSync(historyDir, { recursive: true });
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const filename = `${timestamp}.yaml`;
+  const snapshotPath = path.join(historyDir, filename);
+
+  const content = yaml.stringify(state);
+  fs.writeFileSync(snapshotPath, content, 'utf-8');
+
+  return snapshotPath;
+}
+
+export function calculateMetrics(tasks: Task[]): State['metrics'] {
+  const completed = tasks.filter(t => t.status === 'completed').length;
+  const in_progress = tasks.filter(t => t.status === 'in_progress').length;
+  const pending = tasks.filter(t => t.status === 'pending').length;
+  const blocked = tasks.filter(t => t.status === 'blocked').length;
+  const total_tasks = tasks.length;
+  const progress_percent = total_tasks > 0 ? Math.round((completed / total_tasks) * 100) : 0;
+
+  return {
+    total_tasks,
+    completed,
+    in_progress,
+    pending,
+    blocked,
+    progress_percent
+  };
+}
+
+export function formatProgress(percent: number): string {
+  const filled = Math.round(percent / 10);
+  const empty = 10 - filled;
+  return '█'.repeat(filled) + '░'.repeat(empty);
+}
+```
+
+**Step 4: 编译验证**
+
+```bash
+npm run build
+```
+
+Expected: 编译成功
+
+**Step 5: Commit**
+
+```bash
+git add src/core/types.ts src/core/filesystem.ts src/core/state.ts
+git commit -m "feat: add core modules (types, filesystem, state)"
+```
+
+---
+
+## Task 4: init 命令
+
+**Files:**
+- Create: `src/cli/commands/init.ts`
+
+**Step 1: 创建 init 命令**
 
 Create `src/cli/commands/init.ts`:
 
@@ -198,6 +350,7 @@ Create `src/cli/commands/init.ts`:
 import { Command } from 'commander';
 import path from 'path';
 import { ensureDir, writeFile, fileExists, getSupercraftDir, getProjectRoot } from '../../core/filesystem.js';
+import { loadState, saveState, saveSnapshot } from '../../core/state.js';
 
 const DEFAULT_CONFIG = `# Supercraft 项目配置
 
@@ -321,6 +474,15 @@ export const initCommand = new Command('init')
     writeFile(path.join(supercraftDir, 'templates', 'design-doc.md'), DEFAULT_DESIGN_TEMPLATE);
     writeFile(path.join(supercraftDir, 'templates', 'plan.md'), DEFAULT_PLAN_TEMPLATE);
 
+    // 自动创建初始快照（设计文档要求：init 时创建快照）
+    const state = loadState();
+    if (state) {
+      // 更新 state.yaml 中的 root 路径为实际项目路径
+      state.project.root = projectRoot;
+      saveState(state);
+      saveSnapshot(state);
+    }
+
     console.log('✓ 初始化完成');
     console.log(`  目录: ${supercraftDir}`);
     console.log('');
@@ -333,7 +495,7 @@ export const initCommand = new Command('init')
   });
 ```
 
-**Step 3: 编译验证**
+**Step 2: 编译验证**
 
 ```bash
 npm run build
@@ -341,7 +503,7 @@ npm run build
 
 Expected: 编译成功
 
-**Step 4: 测试 init 命令**
+**Step 3: 测试 init 命令**
 
 ```bash
 # 在临时目录测试
@@ -352,17 +514,17 @@ ls -la .supercraft/
 
 Expected: `.supercraft/` 目录创建成功，包含所有文件
 
-**Step 5: Commit**
+**Step 4: Commit**
 
 ```bash
 cd /Users/wangguiping/workspace/github/supercraft
-git add src/core/filesystem.ts src/cli/commands/init.ts
+git add src/cli/commands/init.ts
 git commit -m "feat: add init command to create .supercraft directory"
 ```
 
 ---
 
-## Task 4: status 命令
+## Task 5: status 命令
 
 **Files:**
 - Create: `src/cli/commands/status.ts`
@@ -588,7 +750,7 @@ git commit -m "feat: add status command to show project progress"
 
 ---
 
-## Task 5: 插件元数据
+## Task 6: 插件元数据
 
 **Files:**
 - Create: `.claude-plugin/plugin.json`
@@ -627,7 +789,7 @@ git commit -m "feat: add Claude Code plugin metadata"
 
 ---
 
-## Task 6: Session Hook
+## Task 7: Session Hook
 
 **Files:**
 - Create: `hooks/hooks.json`
@@ -738,7 +900,7 @@ git commit -m "feat: add session start hook for context injection"
 
 ---
 
-## Task 7: brainstorming skill
+## Task 8: brainstorming skill
 
 **Files:**
 - Create: `skills/brainstorming/SKILL.md`
@@ -858,7 +1020,7 @@ git commit -m "feat: add brainstorming skill"
 
 ---
 
-## Task 8: 默认模板
+## Task 9: 默认模板
 
 **Files:**
 - Create: `templates/design-doc.md`
@@ -979,7 +1141,7 @@ git commit -m "feat: add default templates for design docs and plans"
 
 ---
 
-## Task 9: README 文档
+## Task 10: README 文档
 
 **Files:**
 - Create: `README.md`
@@ -1060,7 +1222,7 @@ git commit -m "docs: add README"
 
 ---
 
-## Task 10: 端到端验证
+## Task 11: 端到端验证
 
 **Step 1: 编译项目**
 
@@ -1122,6 +1284,7 @@ git push
 ## Phase 1 验收标准
 
 - [ ] `supercraft init` 创建正确的目录结构
+- [ ] `supercraft init` 自动创建初始快照（设计文档要求）
 - [ ] `supercraft status` 显示项目状态
 - [ ] `.claude-plugin/plugin.json` 存在
 - [ ] `hooks/session-start.sh` 可执行

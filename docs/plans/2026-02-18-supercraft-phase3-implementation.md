@@ -507,8 +507,10 @@ import { fileExists, getSupercraftDir } from '../../core/filesystem.js';
 
 // 获取插件内置模板目录
 function getBuiltinTemplatesDir(): string {
-  // 在编译后的目录结构中，templates 在插件根目录
-  return path.join(process.cwd(), 'templates');
+  // 使用 CLAUDE_PLUGIN_ROOT 环境变量（Claude Code 插件标准环境变量）
+  // fallback 到当前目录（用于本地测试）
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || process.cwd();
+  return path.join(pluginRoot, 'templates');
 }
 
 // 获取项目自定义模板目录
@@ -1044,11 +1046,12 @@ git commit -m "docs: update README with all CLI commands"
 **Files:**
 - Create: `tests/core/state.test.ts`
 - Create: `tests/core/config.test.ts`
+- Create: `tests/cli/commands.test.ts`
 
 **Step 1: 创建测试目录**
 
 ```bash
-mkdir -p tests/core
+mkdir -p tests/core tests/cli
 ```
 
 **Step 2: 创建状态测试**
@@ -1174,6 +1177,208 @@ describe('mergeConfigs', () => {
 });
 ```
 
+**Step 4: 创建 CLI 命令测试**
+
+Create `tests/cli/commands.test.ts`:
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+
+const TEST_DIR = path.join(os.tmpdir(), 'supercraft-cli-test-' + Date.now());
+
+// Helper to run CLI commands
+function runCLI(args: string[]): { stdout: string; stderr: string; status: number } {
+  const cliPath = path.join(process.cwd(), 'dist/cli/index.js');
+  try {
+    const stdout = execSync(`node ${cliPath} ${args.join(' ')}`, {
+      encoding: 'utf-8',
+      cwd: TEST_DIR
+    });
+    return { stdout, stderr: '', status: 0 };
+  } catch (error: any) {
+    return {
+      stdout: error.stdout?.toString() || '',
+      stderr: error.stderr?.toString() || '',
+      status: error.status || 1
+    };
+  }
+}
+
+beforeEach(() => {
+  // Create test directory
+  fs.mkdirSync(TEST_DIR, { recursive: true });
+  process.chdir(TEST_DIR);
+});
+
+afterEach(() => {
+  // Cleanup
+  fs.rmSync(TEST_DIR, { recursive: true, force: true });
+});
+
+describe('init command', () => {
+  it('should create .supercraft directory', () => {
+    runCLI(['init']);
+    const supercraftDir = path.join(TEST_DIR, '.supercraft');
+    expect(fs.existsSync(supercraftDir)).toBe(true);
+  });
+
+  it('should create config.yaml', () => {
+    runCLI(['init']);
+    const configPath = path.join(TEST_DIR, '.supercraft', 'config.yaml');
+    expect(fs.existsSync(configPath)).toBe(true);
+  });
+
+  it('should create state.yaml', () => {
+    runCLI(['init']);
+    const statePath = path.join(TEST_DIR, '.supercraft', 'state.yaml');
+    expect(fs.existsSync(statePath)).toBe(true);
+  });
+
+  it('should create history directory with initial snapshot', () => {
+    runCLI(['init']);
+    const historyDir = path.join(TEST_DIR, '.supercraft', 'history');
+    expect(fs.existsSync(historyDir)).toBe(true);
+    const files = fs.readdirSync(historyDir);
+    expect(files.length).toBeGreaterThan(0);
+  });
+});
+
+describe('status command', () => {
+  it('should show error when not initialized', () => {
+    const result = runCLI(['status']);
+    expect(result.stdout).toContain('项目未初始化');
+  });
+
+  it('should show project status after init', () => {
+    runCLI(['init']);
+    const result = runCLI(['status']);
+    expect(result.stdout).toContain('项目:');
+    expect(result.stdout).toContain('进度:');
+  });
+});
+
+describe('task command', () => {
+  it('should show error when not initialized', () => {
+    const result = runCLI(['task', 'list']);
+    expect(result.stdout).toContain('项目未初始化');
+  });
+
+  it('should create task', () => {
+    runCLI(['init']);
+    const result = runCLI(['task', 'create', '--title', 'Test Task', '--priority', 'high']);
+    expect(result.stdout).toContain('✓');
+  });
+
+  it('should list tasks', () => {
+    runCLI(['init']);
+    runCLI(['task', 'create', '--title', 'Task 1']);
+    runCLI(['task', 'create', '--title', 'Task 2']);
+    const result = runCLI(['task', 'list']);
+    expect(result.stdout).toContain('Task 1');
+    expect(result.stdout).toContain('Task 2');
+  });
+
+  it('should start task', () => {
+    runCLI(['init']);
+    runCLI(['task', 'create', '--title', 'Task 1']);
+    const result = runCLI(['task', 'start', 'task-1']);
+    expect(result.stdout).toContain('✓');
+  });
+
+  it('should complete task', () => {
+    runCLI(['init']);
+    runCLI(['task', 'create', '--title', 'Task 1']);
+    runCLI(['task', 'start', 'task-1']);
+    const result = runCLI(['task', 'complete', 'task-1']);
+    expect(result.stdout).toContain('✓');
+  });
+
+  it('should block task', () => {
+    runCLI(['init']);
+    runCLI(['task', 'create', '--title', 'Task 1']);
+    const result = runCLI(['task', 'block', 'task-1', '等待依赖']);
+    expect(result.stdout).toContain('✗');
+  });
+
+  it('should filter tasks by status', () => {
+    runCLI(['init']);
+    runCLI(['task', 'create', '--title', 'Task 1']);
+    runCLI(['task', 'create', '--title', 'Task 2']);
+    runCLI(['task', 'start', 'task-1']);
+    const result = runCLI(['task', 'list', '--status', 'pending']);
+    expect(result.stdout).toContain('Task 2');
+  });
+});
+
+describe('state command', () => {
+  it('should create snapshot', () => {
+    runCLI(['init']);
+    const result = runCLI(['state', 'snapshot']);
+    expect(result.stdout).toContain('✓');
+  });
+
+  it('should list history', () => {
+    runCLI(['init']);
+    runCLI(['state', 'snapshot']);
+    const result = runCLI(['state', 'history']);
+    expect(result.stdout).toContain('历史快照');
+  });
+});
+
+describe('config command', () => {
+  it('should show error when not initialized', () => {
+    const result = runCLI(['config', 'list']);
+    expect(result.stdout).toContain('项目未初始化');
+  });
+
+  it('should list config', () => {
+    runCLI(['init']);
+    const result = runCLI(['config', 'list']);
+    expect(result.stdout).toContain('project.name');
+  });
+
+  it('should set and get config', () => {
+    runCLI(['init']);
+    runCLI(['config', 'set', 'project.name', 'test-project']);
+    const result = runCLI(['config', 'get', 'project.name']);
+    expect(result.stdout).toContain('test-project');
+  });
+});
+
+describe('spec command', () => {
+  it('should list specs', () => {
+    runCLI(['init']);
+    const result = runCLI(['spec', 'list']);
+    expect(result.stdout).toContain('coding-style');
+  });
+
+  it('should get spec content', () => {
+    runCLI(['init']);
+    const result = runCLI(['spec', 'get', 'coding-style']);
+    expect(result.stdout).toContain('<SPEC');
+  });
+});
+
+describe('template command', () => {
+  it('should list templates', () => {
+    runCLI(['init']);
+    const result = runCLI(['template', 'list']);
+    expect(result.stdout).toContain('design-doc');
+  });
+
+  it('should copy template', () => {
+    runCLI(['init']);
+    const result = runCLI(['template', 'copy', 'design-doc']);
+    expect(result.stdout).toContain('✓');
+    expect(fs.existsSync(path.join(TEST_DIR, 'docs', 'plans'))).toBe(true);
+  });
+});
+```
+
 **Step 4: 更新 package.json 测试配置**
 
 确保 `package.json` 有正确的 Jest 配置:
@@ -1212,7 +1417,7 @@ Expected: 测试通过
 
 ```bash
 git add tests/ package.json
-git commit -m "test: add unit tests for state and config modules"
+git commit -m "test: add unit tests for state, config, and CLI commands"
 ```
 
 ---
@@ -1337,7 +1542,8 @@ git push
 - [ ] 所有 CLI 命令可用
 - [ ] 4 个技能完整可用
 - [ ] 用户规范/模板能被正确注入/复制
-- [ ] 单元测试通过
+- [ ] 单元测试通过 (core: state, config)
+- [ ] CLI 命令测试通过 (commands: init, status, task, state, config, spec, template)
 
 ---
 

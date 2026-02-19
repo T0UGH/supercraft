@@ -361,9 +361,41 @@ supercraft state history                  # 列出所有快照
 ```
 
 **自动快照时机**：
-- 每次 `task` 命令执行前
 - `supercraft init` 时
+- 每次 `task` 命令执行**前**（仅限会修改状态的操作）：
+  - `task start` - 开始任务
+  - `task complete` - 完成任务
+  - `task block` - 阻塞任务
+  - `task rollback` - 回退任务
 - 用户手动执行 `supercraft state snapshot`
+
+**注意**：`task create`、`task list`、`task show` 是只读操作，不创建快照。
+
+### 6.5 快照 vs Git（重要澄清）
+
+**快照只管理任务状态**，不管理代码和文档：
+
+| 内容 | 管理工具 | 用途 |
+|------|----------|------|
+| 任务状态（pending/in_progress/completed/blocked） | Supercraft 快照 | 任务进度追踪 |
+| 代码文件 | Git | 代码版本管理 |
+| 文档文件（design-doc, plan等） | Git | 文档版本管理 |
+
+**为什么这样设计**：
+1. Git 已经有成熟的版本管理，不需要重复造轮子
+2. 把代码版本管理和任务状态管理混在一起会增加复杂度
+3. Supercraft 专注于任务进度管理，定位清晰
+
+**使用场景示例**：
+```
+1. 写设计文档 → Git commit
+2. 写实施计划 → Git commit
+3. 开始任务 → supercraft task start task-1（创建快照）
+4. 实现代码 → Git commit
+5. 完成任务 → supercraft task complete task-1（创建快照）
+6. 发现做错了 → supercraft task rollback task-1（回退任务状态）
+7. Git checkout 回退代码
+```
 
 ---
 
