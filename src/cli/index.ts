@@ -4,6 +4,9 @@ import { initCommand } from './commands/init.js';
 import { statusCommand } from './commands/status.js';
 import { taskCommand } from './commands/task.js';
 import { stateCommand } from './commands/state.js';
+import { configCommand } from './commands/config.js';
+import { specCommand } from './commands/spec.js';
+import { templateCommand } from './commands/template.js';
 
 const program = new Command();
 
@@ -17,5 +20,8 @@ program.addCommand(initCommand);
 program.addCommand(statusCommand);
 program.addCommand(taskCommand);
 program.addCommand(stateCommand);
+program.addCommand(configCommand);
+program.addCommand(specCommand);
+program.addCommand(templateCommand);
 
 program.parse();
