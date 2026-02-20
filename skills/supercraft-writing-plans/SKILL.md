@@ -21,11 +21,29 @@ description: "Use when you have a spec or requirements and need to create an imp
    supercraft spec get <规范名>  # 获取规范内容
    ```
 
-2. **创建计划文档**：
-   ```bash
-   supercraft template list  # 查看可用模板
-   supercraft template copy plan  # 复制计划模板
-   ```
+2. **创建计划文档**（可选）：
+   - 询问用户是否需要使用模板
+
+### 0.1 选择是否使用模板
+
+**首先列出可用模板：**
+
+```bash
+supercraft template list
+```
+
+**使用 AskUserQuestion 询问用户：**
+
+```
+- "需要使用计划模板吗？"
+- 选项：是 / 否
+```
+
+如果选择"是"，复制模板：
+
+```bash
+supercraft template copy plan
+```
 
 ## 检查清单
 
@@ -91,7 +109,9 @@ supercraft task list
 
 ## 计划文档结构
 
-使用 supercraft plan 模板，包含以下头部：
+如果用户选择使用模板，复制模板后模板已包含完整结构。
+
+如果用户选择不使用模板，手动创建计划文档，包含以下头部：
 
 ```markdown
 # [功能名称] 实施计划
