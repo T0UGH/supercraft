@@ -1,0 +1,19 @@
+{
+  "name": "supercraft-marketplace",
+  "description": "Supercraft marketplace - customizable AI-assisted development workflow system",
+  "owner": {
+    "name": "T0UGH",
+    "email": "T0UGH@example.com"
+  },
+  "plugins": [
+    {
+      "name": "supercraft",
+      "description": "可定制的 AI 辅助开发工作流系统，支持配置注入和进度管理",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "T0UGH"
+      }
+    }
+  ]
+}
