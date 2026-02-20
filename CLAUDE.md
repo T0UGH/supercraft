@@ -65,3 +65,16 @@ Four skills are available in `skills/` directory:
 - Task status flows: `pending → in_progress → completed` (or `blocked`)
 - Snapshots are saved as timestamped YAML files in `history/`
 - All file operations use the utilities in `src/core/filesystem.ts`
+
+## Usage
+
+Each project needs to be initialized before using other commands:
+
+```bash
+# Initialize project (creates .supercraft/ directory with defaults)
+supercraft init
+
+# Then use other commands
+supercraft status
+supercraft task create -t "Task 1" -p high
+```

@@ -283,6 +283,22 @@ npm run build
 npm test
 ```
 
+## 使用流程
+
+每个项目首次使用需要初始化：
+
+```bash
+# 1. 进入项目目录
+cd your-project
+
+# 2. 初始化 supercraft（创建 .supercraft/ 目录和默认配置）
+supercraft init
+
+# 3. 之后即可使用其他命令
+supercraft status
+supercraft task create -t "任务1" -p high
+```
+
 ## 许可证
 
 MIT
