@@ -21,6 +21,7 @@ description: "Use when starting any creative work - creating features, building 
 
 必须按顺序完成以下每个项目：
 
+0. **前置准备** — 获取规范、选择模板
 1. **探索项目上下文** — 检查文件、文档、最近提交
 2. **提出澄清问题** — 一次一个，理解目的/约束/成功标准
 3. **提出 2-3 种方案** — 包含权衡和你的推荐
@@ -32,6 +33,7 @@ description: "Use when starting any creative work - creating features, building 
 
 ```dot
 digraph brainstorming {
+    "前置准备" [shape=box];
     "探索项目上下文" [shape=box];
     "提出澄清问题" [shape=box];
     "提出 2-3 种方案" [shape=box];
@@ -40,6 +42,7 @@ digraph brainstorming {
     "编写设计文档" [shape=box];
     "调用 writing-plans" [shape=doublecircle];
 
+    "前置准备" -> "探索项目上下文";
     "探索项目上下文" -> "提出澄清问题";
     "提出澄清问题" -> "提出 2-3 种方案";
     "提出 2-3 种方案" -> "呈现设计部分";
@@ -50,9 +53,48 @@ digraph brainstorming {
 }
 ```
 
-**最终状态是调用 writing-plans。** 不要调用 frontend-design、mcp-builder 或任何其他实现技能。brainstorming 之后唯一的技能是 writing-plans。
-
 ## 工作流程
+
+### 步骤 0: 前置准备
+
+#### 0.1 获取用户规范（如果需要）
+
+询问用户是否需要注入已有的团队规范：
+
+```
+使用 AskUserQuestion 询问：
+- "需要注入团队编码规范吗？"
+- 选项：是 / 否
+```
+
+如果用户选择"是"，获取规范：
+
+```bash
+supercraft spec list  # 查看可用规范
+supercraft spec get <规范名>  # 获取规范内容
+```
+
+#### 0.2 选择并创建设计模板
+
+**必须使用 AskUserQuestion 让用户选择模板：**
+
+```
+使用 AskUserQuestion 询问：
+- "想用什么模板来组织设计？"
+- 选项：
+  - design-doc: 通用设计文档模板
+  - api-design: API 设计专用
+  - component: 组件设计专用
+  - 其他（用户输入）
+```
+
+根据用户选择复制模板：
+
+```bash
+supercraft template copy <选择的模板>
+```
+
+模板内容将指导后续提问的方向。
 
 ### 步骤 1: 探索项目上下文
 
@@ -68,13 +110,26 @@ digraph brainstorming {
 
 优先使用 AskUserQuestion 工具提供多选题，同时允许用户选择"其他"输入自定义答案。只有在没有合适选项时才使用开放式问题。
 
-**必问问题（根据情况选择）：**
+**基于模板的必问问题（根据选择的模板选择）：**
 
+**通用 design-doc 模板：**
 1. **背景**：这个功能的用途是什么？解决什么问题？
 2. **用户**：谁会使用这个功能？
 3. **约束**：有什么技术限制？需要兼容什么？
 4. **成功标准**：怎么算完成？有哪些验收条件？
 5. **优先级**：必须要有还是可以有？
+
+**API 设计模板：**
+1. **资源**：这个 API 管理什么资源？
+2. **操作**：需要哪些 CRUD 操作？
+3. **认证**：需要什么认证方式？
+4. **错误处理**：有哪些错误码？
+
+**组件设计模板：**
+1. **职责**：这个组件的核心职责是什么？
+2. **状态**：需要管理哪些状态？
+3. **交互**：与哪些组件交互？
+4. ** Props**：需要接收哪些参数？
 
 ### 步骤 3: 提出方案
 
