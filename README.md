@@ -2,8 +2,6 @@
 
 可定制的 AI 辅助开发工作流系统，为 Claude Code 提供配置注入和进度管理能力。
 
-## 测试 push
-
 ## 安装
 
 ```bash
@@ -21,17 +19,67 @@ supercraft init
 supercraft status
 ```
 
-## 功能
+## CLI 命令
 
-- **配置管理**: 全局 + 项目级配置
-- **状态持久化**: 任务状态跨会话保持
-- **技能系统**: 4 个核心技能
-  - `brainstorming`: 头脑风暴
-  - `writing-plans`: 编写计划
-  - `execute-plan`: 执行计划
-  - `verification`: 完成前验证
-- **规范注入**: 用户自定义规范注入 AI 上下文
-- **模板管理**: 设计文档、计划模板
+### 基础命令
+
+```bash
+supercraft init              # 初始化项目
+supercraft status            # 查看当前状态
+```
+
+### 任务管理
+
+```bash
+supercraft task list         # 列出所有任务
+supercraft task list -s in_progress  # 按状态筛选
+supercraft task show <id>    # 显示任务详情
+supercraft task create -t "标题" -p high  # 创建任务
+supercraft task start <id>   # 开始任务
+supercraft task complete <id>  # 完成任务
+supercraft task block <id> "原因"  # 阻塞任务
+supercraft task rollback <id>  # 回退任务
+```
+
+### 状态管理
+
+```bash
+supercraft state snapshot    # 创建快照
+supercraft state history     # 查看历史快照
+supercraft state restore <file>  # 恢复快照
+```
+
+### 配置管理
+
+```bash
+supercraft config list       # 列出配置
+supercraft config get project.name  # 获取配置项
+supercraft config set project.name "my-app"  # 设置配置
+supercraft config set verification.commands "npm test" --global  # 全局配置
+```
+
+### 规范管理（知识类）
+
+```bash
+supercraft spec list         # 列出规范
+supercraft spec get coding-style  # 获取规范内容（注入 AI 上下文）
+```
+
+### 模板管理（模板类）
+
+```bash
+supercraft template list     # 列出模板
+supercraft template show design-doc  # 预览模板
+supercraft template copy design-doc  # 复制模板到本地
+supercraft template copy plan -o docs/plans -n my-plan.md  # 指定输出
+```
+
+## 技能
+
+- **brainstorming**: 头脑风暴，将想法转化为设计
+- **writing-plans**: 编写实施计划
+- **execute-plan**: 执行实施计划
+- **verification**: 完成前验证
 
 ## 目录结构
 
@@ -41,7 +89,18 @@ supercraft status
 ├── state.yaml       # 任务状态
 ├── history/         # 状态快照
 ├── specs/           # 用户规范
+│   └── coding-style.md
 └── templates/       # 文档模板
+    ├── design-doc.md
+    └── plan.md
+```
+
+## 配置层级
+
+```
+全局配置 (~/.supercraft/config.yaml)  ← 最低优先级
+    ↓ 覆盖
+项目配置 (.supercraft/config.yaml)
 ```
 
 ## 开发
