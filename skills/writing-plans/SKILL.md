@@ -99,5 +99,5 @@ git commit -m "[message]"
 
 完成计划后，提供两个执行选项：
 
-1. **Subagent-Driven（当前会话）** - 使用 superpowers:subagent-driven-development
-2. **Parallel Session（单独会话）** - 在新会话中使用 superpowers:executing-plans
+1. **Subagent-Driven（当前会话）** - 使用 subagent-driven-development 技能
+2. **Parallel Session（单独会话）** - 在新会话中使用 executing-plans 技能

@@ -15,8 +15,19 @@ export function loadState(): State | null {
   if (!fileExists(statePath)) {
     return null;
   }
-  const content = fs.readFileSync(statePath, 'utf-8');
-  return yaml.parse(content) as State;
+  try {
+    const content = fs.readFileSync(statePath, 'utf-8');
+    const state = yaml.parse(content) as State;
+    // 基本验证
+    if (!state || !state.tasks || !state.metrics) {
+      console.error('状态文件格式无效');
+      return null;
+    }
+    return state;
+  } catch (e) {
+    console.error('无法读取状态文件:', e);
+    return null;
+  }
 }
 
 export function saveState(state: State): void {

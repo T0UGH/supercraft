@@ -101,4 +101,4 @@ supercraft state restore <snapshot-file>
    supercraft task list -s in_progress
    supercraft task list -s blocked
    ```
-3. 调用 verification skill 验证
+3. 调用 verification 技能验证

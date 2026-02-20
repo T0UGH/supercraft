@@ -24,8 +24,16 @@ export function loadGlobalConfig(): Config | null {
   if (!fs.existsSync(configPath)) {
     return null;
   }
-  const content = fs.readFileSync(configPath, 'utf-8');
-  return yaml.parse(content) as Config;
+  try {
+    const content = fs.readFileSync(configPath, 'utf-8');
+    const config = yaml.parse(content) as Config;
+    if (!config || !config.project) {
+      return null;
+    }
+    return config;
+  } catch {
+    return null;
+  }
 }
 
 export function loadProjectConfig(): Config | null {
@@ -33,14 +41,27 @@ export function loadProjectConfig(): Config | null {
   if (!fileExists(configPath)) {
     return null;
   }
-  const content = fs.readFileSync(configPath, 'utf-8');
-  return yaml.parse(content) as Config;
+  try {
+    const content = fs.readFileSync(configPath, 'utf-8');
+    const config = yaml.parse(content) as Config;
+    if (!config || !config.project) {
+      return null;
+    }
+    return config;
+  } catch {
+    return null;
+  }
 }
 
 export function mergeConfigs(global: Config | null, project: Config | null): Config {
+  const projectVerif = project?.verification;
+  const globalVerif = global?.verification;
+  const hasProjectVerif = projectVerif && projectVerif.commands && projectVerif.commands.length > 0;
+  const hasGlobalVerif = globalVerif && globalVerif.commands && globalVerif.commands.length > 0;
+
   return {
     project: project?.project || global?.project || { name: 'unknown' },
-    verification: project?.verification || global?.verification
+    verification: hasProjectVerif ? projectVerif : (hasGlobalVerif ? globalVerif : undefined)
   };
 }
 

@@ -110,18 +110,24 @@ const setCommand = new Command('set')
   .argument('<key>', '配置键名')
   .argument('<value>', '配置值')
   .option('--global', '设置到全局配置')
+  .option('-r, --replace', '替换整个数组（用于 verification.commands）')
   .action((key, value, options) => {
+    const defaultConfig: Config = {
+      project: { name: 'unknown' },
+      verification: { commands: [] }
+    };
+
     let config: Config;
 
     if (options.global) {
-      config = loadGlobalConfig() || { project: { name: 'unknown' } };
+      config = loadGlobalConfig() || defaultConfig;
     } else {
       if (!fileExists(getSupercraftDir())) {
         console.log('✗ 项目未初始化');
         console.log('  请先运行: supercraft init');
         return;
       }
-      config = loadProjectConfig() || { project: { name: 'unknown' } };
+      config = loadProjectConfig() || defaultConfig;
     }
 
     // 解析并设置值
@@ -131,13 +137,20 @@ const setCommand = new Command('set')
       if (!config.verification) {
         config.verification = { commands: [] };
       }
-      // 支持追加命令
-      config.verification.commands.push(value);
+      if (options.replace) {
+        // 替换整个数组
+        config.verification.commands = [value];
+      } else {
+        // 追加命令
+        config.verification.commands.push(value);
+      }
     } else {
       console.log(`✗ 不支持的配置项: ${key}`);
       console.log('  支持的配置项:');
       console.log('    project.name');
       console.log('    verification.commands');
+      console.log('  选项:');
+      console.log('    --replace: 替换整个数组（用于 verification.commands）');
       return;
     }
 

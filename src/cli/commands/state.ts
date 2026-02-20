@@ -38,11 +38,17 @@ const historyCommand = new Command('history')
       return;
     }
 
+    const limit = parseInt(options.limit);
+    if (isNaN(limit) || limit <= 0) {
+      console.log('✗ 无效的数量限制');
+      return;
+    }
+
     const files = fs.readdirSync(historyDir)
       .filter(f => f.endsWith('.yaml'))
       .sort()
       .reverse()
-      .slice(0, parseInt(options.limit));
+      .slice(0, limit);
 
     if (files.length === 0) {
       console.log('暂无历史快照');
@@ -52,8 +58,18 @@ const historyCommand = new Command('history')
     console.log('\n历史快照:\n');
     for (const file of files) {
       const filePath = path.join(historyDir, file);
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const snapshotState = yaml.parse(content);
+      let snapshotState;
+      try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        snapshotState = yaml.parse(content);
+      } catch {
+        console.log(`  ${file} (无法解析)`);
+        continue;
+      }
+      if (!snapshotState?.metrics) {
+        console.log(`  ${file} (格式无效)`);
+        continue;
+      }
       const metrics = snapshotState.metrics;
       console.log(`  ${file}`);
       console.log(`    任务: ${metrics.total_tasks} | 完成: ${metrics.completed} | 进度: ${metrics.progress_percent}%`);
@@ -88,8 +104,21 @@ const restoreCommand = new Command('restore')
     }
 
     // 恢复快照
-    const content = fs.readFileSync(snapshotPath, 'utf-8');
-    const restoredState = yaml.parse(content);
+    let restoredState;
+    try {
+      const content = fs.readFileSync(snapshotPath, 'utf-8');
+      restoredState = yaml.parse(content);
+    } catch {
+      console.log('✗ 快照文件格式无效');
+      return;
+    }
+
+    // 验证快照格式
+    if (!restoredState || !restoredState.tasks || !restoredState.metrics) {
+      console.log('✗ 快照格式无效');
+      return;
+    }
+
     saveState(restoredState);
 
     console.log(`✓ 已恢复快照: ${filename}`);
