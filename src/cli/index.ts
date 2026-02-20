@@ -2,6 +2,8 @@
 import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { statusCommand } from './commands/status.js';
+import { taskCommand } from './commands/task.js';
+import { stateCommand } from './commands/state.js';
 
 const program = new Command();
 
@@ -13,5 +15,7 @@ program
 // 注册命令
 program.addCommand(initCommand);
 program.addCommand(statusCommand);
+program.addCommand(taskCommand);
+program.addCommand(stateCommand);
 
 program.parse();
