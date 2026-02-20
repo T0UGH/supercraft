@@ -13,7 +13,11 @@ export function writeFile(filePath: string, content: string): void {
 }
 
 export function fileExists(filePath: string): boolean {
-  return fs.existsSync(filePath);
+  try {
+    return fs.statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
 }
 
 export function getProjectRoot(): string {

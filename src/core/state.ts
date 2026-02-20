@@ -72,7 +72,7 @@ export function calculateMetrics(tasks: Task[]): State['metrics'] {
 }
 
 export function formatProgress(percent: number): string {
-  const filled = Math.round(percent / 10);
+  const filled = Math.ceil(percent / 10);
   const empty = 10 - filled;
   return '█'.repeat(filled) + '░'.repeat(empty);
 }

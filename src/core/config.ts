@@ -72,6 +72,8 @@ export function loadConfig(): Config {
 }
 
 export function saveProjectConfig(config: Config): void {
+  const supercraftDir = getSupercraftDir();
+  ensureDir(supercraftDir);
   const configPath = getProjectConfigPath();
   const content = yaml.stringify(config);
   fs.writeFileSync(configPath, content, 'utf-8');
