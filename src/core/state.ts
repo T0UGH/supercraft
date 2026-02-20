@@ -65,3 +65,20 @@ export function formatProgress(percent: number): string {
   const empty = 10 - filled;
   return '█'.repeat(filled) + '░'.repeat(empty);
 }
+
+export function generateTaskId(tasks: Task[]): string {
+  const existingIds = tasks.map(t => parseInt(t.id.replace('task-', ''))).filter(n => !isNaN(n));
+  const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+  return `task-${maxId + 1}`;
+}
+
+export function createTask(title: string, description: string | undefined, priority: 'high' | 'medium' | 'low'): Task {
+  return {
+    id: '',
+    title,
+    description,
+    status: 'pending',
+    priority,
+    created_at: new Date().toISOString()
+  };
+}
