@@ -1,9 +1,9 @@
 ---
-name: writing-plans
+name: supercraft-writing-plans
 description: "Use when you have a spec or requirements and need to create an implementation plan"
 ---
 
-# Writing Plans: 编写实施计划
+# Supercraft Writing Plans: 编写实施计划
 
 ## 概述
 

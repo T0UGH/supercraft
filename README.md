@@ -76,10 +76,10 @@ supercraft template copy plan -o docs/plans -n my-plan.md  # 指定输出
 
 ## 技能
 
-- **brainstorming**: 头脑风暴，将想法转化为设计
-- **writing-plans**: 编写实施计划
-- **execute-plan**: 执行实施计划
-- **verification**: 完成前验证
+- **supercraft-brainstorming**: 头脑风暴，将想法转化为设计
+- **supercraft-writing-plans**: 编写实施计划
+- **supercraft-execute-plan**: 执行实施计划
+- **supercraft-verification**: 完成前验证
 
 ## 目录结构
 

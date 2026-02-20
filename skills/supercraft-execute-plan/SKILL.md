@@ -1,9 +1,9 @@
 ---
-name: execute-plan
+name: supercraft-execute-plan
 description: "Use when you have a written implementation plan to execute"
 ---
 
-# Execute Plan: 执行实施计划
+# Supercraft Execute Plan: 执行实施计划
 
 ## 概述
 

@@ -1,9 +1,9 @@
 ---
-name: brainstorming
+name: supercraft-brainstorming
 description: "Use when starting any creative work - creating features, building components, adding functionality"
 ---
 
-# Brainstorming: 将想法转化为设计
+# Supercraft Brainstorming: 将想法转化为设计
 
 ## 概述
 

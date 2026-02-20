@@ -1,9 +1,9 @@
 ---
-name: verification
+name: supercraft-verification
 description: "Use when about to claim work is complete, before committing or creating PRs"
 ---
 
-# Verification: 完成前验证
+# Supercraft Verification: 完成前验证
 
 ## 概述
 
